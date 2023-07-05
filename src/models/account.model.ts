@@ -9,7 +9,7 @@ export interface IAccountDb extends Document {
 
 @Schema({ timestamps: true })
 export class AccountDb extends Document {
-  @Prop({ required: true })
+  @Prop()
   name: string;
 
   @Prop({ required: true })
