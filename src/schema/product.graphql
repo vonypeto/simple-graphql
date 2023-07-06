@@ -1,9 +1,4 @@
 # product.schema.graphql
-
-interface Node {
-  id: Binary!
-}
-
 type Product implements Node {
   id: Binary!
   name: String!
@@ -12,5 +7,3 @@ type Product implements Node {
   createdAt: DateTime!
   updatedAt: DateTime!
 }
-
-scalar Binary

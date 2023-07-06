@@ -1,0 +1,25 @@
+type Account implements Node {
+  id: Binary!
+  name: String!
+  email: EmailAddress!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Authentication {
+	token: String!
+}
+
+input SignUpInput {
+	email: EmailAddress!
+	name: String!
+	password: String!
+}
+
+type Mutation {
+  signUp(input: SignUpInput!): Authentication!
+}
+
+type Query {
+  status: String! @private
+}

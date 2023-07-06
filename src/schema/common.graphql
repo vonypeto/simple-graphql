@@ -1,0 +1,8 @@
+interface Node {
+  id: Binary!
+}
+scalar Binary
+scalar DateTime
+scalar EmailAddress
+
+directive @private on OBJECT | FIELD_DEFINITION

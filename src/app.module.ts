@@ -1,39 +1,70 @@
-import { config } from 'dotenv';
-config();
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
+import * as path from 'path';
 import { GraphQLModule } from '@nestjs/graphql';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ApolloDriver } from '@nestjs/apollo';
-import { APP_GUARD } from '@nestjs/core';
-import { CorsMiddleware } from './middleware/cors';
-import { AuthGuard } from './middleware/authorization';
-import { ConfigModule } from '@nestjs/config';
-import { join } from 'path';
-import { AccountsModule } from './resolver/accounts/accounts.module';
-import { DatabaseModule } from './configs/mongoose.db';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+// import { APP_GUARD } from '@nestjs/core';
+// import { AuthGuard } from './middleware/authorization';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AccountResolver } from './resolvers/accounts.resolver';
+import { QueryResolver } from './resolvers/query.resolver';
+import { JwtModule } from '@nestjs/jwt';
+import { AccountModule } from './account/account.module';
+import { privateDirectiveTransformer } from './directives/private';
+import { AuthorizationMiddleware } from './middleware/authorization';
 @Module({
   imports: [
-    DatabaseModule,
     ConfigModule.forRoot({
       envFilePath: '.env', // Path to your environment file
+      isGlobal: true,
     }),
-    GraphQLModule.forRoot({
-      autoSchemaFile: [
-        join(process.cwd(), 'schema/account.schema.graphql'),
-        join(process.cwd(), 'schema/product.schema.graphql'), // Add the path to the product schema file
-      ], // Provide the path to the schema file
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return {
+          uri: config.get('MONGODB_URI'),
+        };
+      },
+    }),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return {
+          secret: config.get('SECRET_KEY'),
+          signOptions: { expiresIn: '1d' },
+        };
+      },
+    }),
+    GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
+      useFactory: async () => {
+        return {
+          typePaths: [path.resolve(__dirname, './schema/*.graphql')],
+          transformSchema: (schema) =>
+            privateDirectiveTransformer(schema, 'private'),
+        };
+      },
     }),
-    AccountsModule,
+    AccountModule,
   ],
-  controllers: [AppController],
   providers: [
-    AppService,
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
+    AccountResolver,
+    QueryResolver,
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: AuthGuard,
+    // },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthorizationMiddleware)
+      .forRoutes({ method: RequestMethod.ALL, path: '*' });
+  }
+}

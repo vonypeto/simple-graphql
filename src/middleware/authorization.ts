@@ -1,63 +1,50 @@
 import {
   Injectable,
-  NestMiddleware,
-  CanActivate,
   ExecutionContext,
+  HttpException,
+  HttpStatus,
+  NestMiddleware,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
-import * as atob from 'atob';
-import { verify, VerifyErrors, JwtPayload } from 'jsonwebtoken';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import { JwtService } from '@nestjs/jwt';
+import { Request, Response, NextFunction } from 'express';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class AuthorizationMiddleware implements NestMiddleware {
+  constructor(private readonly jwtService: JwtService) {}
+
+  async use(req: Request & { claims: any }, _: Response, next: NextFunction) {
+    const authorizationHeader = req.headers.authorization;
+    if (!authorizationHeader) return next();
+
+    const [type, token] = authorizationHeader.split(' ');
+    if (type !== 'Bearer' || !token) {
+      return new HttpException({ code: 'FORBIDDEN' }, HttpStatus.FORBIDDEN);
+    }
+
+    req.claims = await this.jwtService.verifyAsync<{ id: string }>(token);
+    console.log('claims', req.claims);
+    return next();
+  }
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ctx = GqlExecutionContext.create(context).getContext();
     const req = ctx.req;
 
     const authorizationHeader = req.headers.authorization;
+    if (!authorizationHeader) return true;
 
-    if (authorizationHeader) {
-      if (authorizationHeader.startsWith('Basic ')) {
-        // Basic Authentication
-        const encodedCredentials = authorizationHeader.substring(6);
-        const decodedCredentials = atob(encodedCredentials);
-        const [username, password] = decodedCredentials.split(':');
-
-        req.authorization = { username, password };
-      } else if (authorizationHeader.startsWith('Bearer ')) {
-        // JWT Authentication
-        const token = authorizationHeader.substring(7);
-
-        req.authorization = { token };
-
-        try {
-          const decoded = await new Promise<JwtPayload | undefined>(
-            (resolve, reject) => {
-              verify(
-                token,
-                process.env.ACCESS_TOKEN_SECRET!,
-                (err: VerifyErrors | null, decoded: JwtPayload | undefined) => {
-                  if (err) {
-                    console.error(err.message);
-                    reject(err);
-                  } else {
-                    console.log(decoded);
-                    resolve(decoded);
-                  }
-                },
-              );
-            },
-          );
-
-          req.ctx = { ...req.ctx, userId: decoded?.userId };
-        } catch (error) {
-          console.error(error);
-          return false;
-        }
+    const [type, token] = authorizationHeader.split(' ');
+    if (type === 'Bearer') {
+      if (!token) {
+        return false;
       }
+
+      req.claims = await this.jwtService.verifyAsync<{ id: string }>(token);
+
+      return true;
     }
 
-    return true;
+    return false;
   }
 }
