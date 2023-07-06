@@ -32,29 +32,11 @@ type Mutation {
   	* `BAD_USER_INPUT` - Invalid credentials.
   """
   authenticate(input: AuthenticateInput!): Authentication!
+}
 
-  """
-  Create a product.
-  """
-  createProduct(input: CreateProductInput!): Product! @private
-
-  """
-  Update a product. User can only update own product.
-
-  ## Error Codes
-  	* `BAD_USER_INPUT` - Product not found.
-  	* `BAD_USER_INPUT` - Cannot update product.
-  """
-  updateProduct(input: UpdateProductInput!): Product! @private
-
-  """
-  Delete a product. User can only delete own product.
-
-  ## Error Codes
-  		* `BAD_USER_INPUT` - Product not found.
-  		* `BAD_USER_INPUT` - Cannot delete product.
-  """
-  deleteProduct(input: DeleteProductInput!): Boolean! @private
+type Query {
+  me: Account! @private
+  status: String
 }
 
 input SignUpInput {
@@ -66,28 +48,4 @@ input SignUpInput {
 input AuthenticateInput {
   email: EmailAddress!
   password: String!
-}
-
-input CreateProductInput {
-  name: String!
-  description: String!
-}
-
-input UpdateProductInput {
-  id: Binary!
-  body: UpdateProductBody!
-}
-
-input UpdateProductBody {
-  name: String
-  description: String
-}
-
-input DeleteProductInput {
-  id: Binary!
-}
-
-type Query {
-  status: String! @private
-  me: Account! @private
 }

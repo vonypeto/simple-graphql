@@ -17,6 +17,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { AccountModule } from './services/account/account.module';
 import { privateDirectiveTransformer } from './directives/private';
 import { AuthorizationMiddleware } from './middleware/authorization';
+import { ProductModule } from './services/product/product.module';
+import { ProductResolver } from './resolvers/product.resolver';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -51,10 +53,12 @@ import { AuthorizationMiddleware } from './middleware/authorization';
       },
     }),
     AccountModule,
+    ProductModule,
   ],
   providers: [
     AccountResolver,
     QueryResolver,
+    ProductResolver,
     // {
     //   provide: APP_GUARD,
     //   useClass: AuthGuard,

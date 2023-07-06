@@ -9,10 +9,10 @@ export class Product {
   name: string;
 
   @Prop({ required: true })
-  price: string;
+  description: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Account', required: true })
-  user: Types.ObjectId | string;
+  owner: Types.ObjectId | string;
 
   @Prop({ default: Date.now })
   createdAt: Date;

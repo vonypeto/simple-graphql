@@ -1,12 +1,5 @@
 import { Resolver, Args, Mutation, Context, Query } from '@nestjs/graphql';
 import { AccountService } from '../services/account/account.service';
-import { v4 as uuidv4 } from 'uuid';
-
-// type UserInput = {
-//   name: string;
-//   email: string;
-//   passwword: string;
-// };
 
 interface User {
   id: string;
@@ -36,6 +29,7 @@ interface AuthenticateInput {
   email: string;
   password: string;
 }
+
 @Resolver()
 export class AccountResolver {
   constructor(private readonly accountService: AccountService) {}
@@ -70,7 +64,7 @@ export class AccountResolver {
   }
 
   @Query()
-  async me(@Context() context: any): Promise<User> {
+  async me(@Context() context: any): Promise<UserData> {
     console.log(context.req.claims);
     if (!context.req.claims) {
       throw new Error('Unauthorized');
@@ -79,33 +73,4 @@ export class AccountResolver {
     // Return the user directly instead of wrapping it in an object
     return user;
   }
-} //
-async function createUser(
-  email: string,
-  name: string,
-  password: string,
-): Promise<User> {
-  // Placeholder logic to generate a random user
-  const userId = uuidv4(); // Generate a random UUID for the user ID
-  const user: User = {
-    id: userId,
-    email,
-    name,
-    // Additional user properties
-  };
-
-  // Logic to store the user in your data source (e.g., database)
-
-  return user;
-}
-
-async function generateToken(userId: string): Promise<string> {
-  // Placeholder logic to generate a random token
-  const token =
-    Math.random().toString(36).substring(2, 15) +
-    Math.random().toString(36).substring(2, 15);
-
-  // Logic to store the token or associate it with the user in your data source
-
-  return token;
 }
