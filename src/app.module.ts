@@ -14,7 +14,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AccountResolver } from './resolvers/accounts.resolver';
 import { QueryResolver } from './resolvers/query.resolver';
 import { JwtModule } from '@nestjs/jwt';
-import { AccountModule } from './account/account.module';
+import { AccountModule } from './services/account/account.module';
 import { privateDirectiveTransformer } from './directives/private';
 import { AuthorizationMiddleware } from './middleware/authorization';
 @Module({

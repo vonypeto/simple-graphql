@@ -15,5 +15,8 @@ export class UserDto {
   readonly password: string;
 
   @Field()
-  readonly token: string;
+  readonly createdAt: Date;
+
+  @Field()
+  readonly updatedAt: Date;
 }

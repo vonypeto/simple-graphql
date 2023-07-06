@@ -7,19 +7,87 @@ type Account implements Node {
 }
 
 type Authentication {
-	token: String!
+  token: String!
 }
 
 input SignUpInput {
-	email: EmailAddress!
-	name: String!
-	password: String!
+  email: EmailAddress!
+  name: String!
+  password: String!
 }
 
 type Mutation {
+  """
+  Sign up a user and get an access token if successful.
+
+  ## Error Codes
+  	* `BAD_USER_INPUT` - Email address already used.
+  """
   signUp(input: SignUpInput!): Authentication!
+
+  """
+  Authenticate a user to get an access token if credentials are valid.
+
+  ## Error Codes
+  	* `BAD_USER_INPUT` - Invalid credentials.
+  """
+  authenticate(input: AuthenticateInput!): Authentication!
+
+  """
+  Create a product.
+  """
+  createProduct(input: CreateProductInput!): Product! @private
+
+  """
+  Update a product. User can only update own product.
+
+  ## Error Codes
+  	* `BAD_USER_INPUT` - Product not found.
+  	* `BAD_USER_INPUT` - Cannot update product.
+  """
+  updateProduct(input: UpdateProductInput!): Product! @private
+
+  """
+  Delete a product. User can only delete own product.
+
+  ## Error Codes
+  		* `BAD_USER_INPUT` - Product not found.
+  		* `BAD_USER_INPUT` - Cannot delete product.
+  """
+  deleteProduct(input: DeleteProductInput!): Boolean! @private
+}
+
+input SignUpInput {
+  email: EmailAddress!
+  name: String!
+  password: String!
+}
+
+input AuthenticateInput {
+  email: EmailAddress!
+  password: String!
+}
+
+input CreateProductInput {
+  name: String!
+  description: String!
+}
+
+input UpdateProductInput {
+  id: Binary!
+  body: UpdateProductBody!
+}
+
+input UpdateProductBody {
+  name: String
+  description: String
+}
+
+input DeleteProductInput {
+  id: Binary!
 }
 
 type Query {
   status: String! @private
+  me: Account! @private
 }

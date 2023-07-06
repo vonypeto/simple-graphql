@@ -13,6 +13,12 @@ export class Product {
 
   @Prop({ type: Types.ObjectId, ref: 'Account', required: true })
   user: Types.ObjectId | string;
+
+  @Prop({ default: Date.now })
+  createdAt: Date;
+
+  @Prop({ default: Date.now })
+  updatedAt: Date;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
