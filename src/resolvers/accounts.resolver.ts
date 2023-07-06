@@ -39,15 +39,6 @@ interface AuthenticateInput {
 @Resolver()
 export class AccountResolver {
   constructor(private readonly accountService: AccountService) {}
-  // @Mutation('signUp2')
-  // async signUp2(
-  //   @Args('input') input: UserInput,
-  //   @Context() context: any,
-  // ): Promise<{ token: string }> {
-  //   console.log('context', context);
-  //   const user = await this.accountService.create(input);
-  //   return { token: await this.accountService.generateToken(user.id) };
-  // }
 
   @Mutation('signUp')
   async signUp(
