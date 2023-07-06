@@ -9,9 +9,13 @@ import { APP_GUARD } from '@nestjs/core';
 import { CorsMiddleware } from './middleware/cors';
 import { AuthGuard } from './middleware/authorization';
 import { ConfigModule } from '@nestjs/config';
+import * as path from 'path';
 import { join } from 'path';
+
 import { AccountsModule } from './resolver/accounts/accounts.module';
 import { DatabaseModule } from './configs/mongoose.db';
+console.log(path.dirname(__filename));
+
 @Module({
   imports: [
     DatabaseModule,

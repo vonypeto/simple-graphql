@@ -21,11 +21,12 @@ export class AccountResolver {
     @Args('input') input: UserInput,
     @Context() context: any,
   ): Promise<UserDto> {
-    const { authorization } = context.req;
-    console.log(authorization);
+    // const { authorization } = context.req;
+    // console.log(authorization);
+
     const { user, token } = await this.accountsService.create({
-      email: authorization.username,
-      password: authorization.password,
+      // email: authorization.username,
+      // password: authorization.password,
       ...input,
     });
     console.log(token);

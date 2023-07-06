@@ -14,6 +14,7 @@ export class AccountsService {
   async create(
     accountData: Partial<IAccountDb>,
   ): Promise<{ user: UserDto; token: string }> {
+    console.log(accountData);
     const account = new this.accountModel(accountData);
     const createdAccount = await account.save();
     const user = this.mapToUserDto(createdAccount);
