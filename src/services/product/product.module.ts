@@ -4,10 +4,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ProductSchema } from 'src/models/product.model';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { ProductResolver } from 'src/resolvers/product.resolver';
+import { AccountDbSchema } from '../../models/account.model';
 
-Module({
+@Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'accounts', schema: ProductSchema }]),
+    MongooseModule.forFeature([
+      { name: 'products', schema: ProductSchema },
+      { name: 'accounts', schema: AccountDbSchema },
+    ]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
@@ -18,7 +23,7 @@ Module({
       },
     }),
   ],
-  providers: [ProductService],
-  exports: [ProductService],
-});
+  providers: [ProductService, ProductResolver],
+  exports: [ProductService, ProductResolver],
+})
 export class ProductModule {}

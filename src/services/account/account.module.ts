@@ -4,6 +4,7 @@ import { AccountDbSchema } from 'src/models/account.model';
 import { AccountService } from './account.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { AccountResolver } from 'src/resolvers/accounts.resolver';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { ConfigService } from '@nestjs/config';
       },
     }),
   ],
-  providers: [AccountService],
-  exports: [AccountService],
+  providers: [AccountService, AccountResolver],
+  exports: [AccountService, AccountResolver],
 })
 export class AccountModule {}

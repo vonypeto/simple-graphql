@@ -1,10 +1,18 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
+export interface IProductDb {
+  name: string;
+  description: string;
+  owner: Types.ObjectId | string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export type ProductDocument = Product & Document;
 
 @Schema({ timestamps: true })
-export class Product {
+export class Product extends Document implements Product {
   @Prop({ required: true })
   name: string;
 

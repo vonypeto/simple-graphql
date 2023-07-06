@@ -31,5 +31,6 @@ export class AccountDb extends Document {
     return { account_id: _id, ...rest };
   }
 }
+export type AccountDocument = AccountDb & Document;
 
 export const AccountDbSchema = SchemaFactory.createForClass(AccountDb);
