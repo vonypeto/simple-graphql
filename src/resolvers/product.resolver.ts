@@ -10,7 +10,7 @@ import {
   CreateProductInput,
   DeleteProductInput,
   ProductSortInput,
-} from 'src/interface/products';
+} from '../interface/products';
 
 @Resolver()
 export class ProductResolver {
@@ -30,18 +30,16 @@ export class ProductResolver {
   }
   @Query('products')
   async listProducts(
-    @Args('first') first: number = 10,
+    @Args('first') first = 10,
     @Args('after') after: Binary,
     @Args('filter') filter: ProductsFilter,
     @Args('sort') sort: ProductSortInput,
-    @Context() context: any,
   ): Promise<ProductConnection> {
     const products = await this.productService.listProducts(
       first,
       after,
       filter,
       sort,
-      context,
     );
 
     // Create ProductEdges with cursors
@@ -76,11 +74,6 @@ export class ProductResolver {
     @Args('input') input: DeleteProductInput,
     @Context() context: any,
   ): Promise<boolean> {
-    console.log(context.req.claims);
-    const success = await this.productService.deleteProduct(
-      input,
-      context.req.claims,
-    );
-    return true;
+    return this.productService.deleteProduct(input, context.req.claims);
   }
 }

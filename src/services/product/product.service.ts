@@ -12,7 +12,7 @@ import {
   Binary,
   ProductSortInput,
   DeleteProductInput,
-} from 'src/interface/products';
+} from '../../interface/products';
 
 @Injectable()
 export class ProductService {
@@ -51,11 +51,10 @@ export class ProductService {
   }
 
   async listProducts(
-    first: number = 10,
+    first = 10,
     after: Binary,
     filter: ProductsFilter,
     sort: ProductSortInput,
-    context: any,
   ): Promise<Product[]> {
     const aggregationPipeline = [];
     // Filter stage

@@ -6,10 +6,9 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { IAccountDb } from '../../models/account.model';
-import { UserDto } from './dto/user.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UserData } from 'src/interface/user';
+import { UserData } from '../../interface/user';
 
 @Injectable()
 export class AccountService {
@@ -34,10 +33,8 @@ export class AccountService {
   }
   async findbyId(accountData: Partial<IAccountDb>) {
     const { id } = accountData;
-    console.log(accountData);
     // Find the account with the provided email
     const account = await this.accountModel.findById(id);
-    console.log(account);
     return this.mapToUserDto(account);
   }
   async login(accountData: Partial<IAccountDb>): Promise<UserData> {

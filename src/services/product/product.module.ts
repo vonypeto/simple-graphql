@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ProductSchema } from 'src/models/product.model';
+import { ProductSchema } from '../../models/product.model';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { ProductResolver } from 'src/resolvers/product.resolver';
+import { ProductResolver } from '../../resolvers/product.resolver';
 import { AccountDbSchema } from '../../models/account.model';
 
 @Module({

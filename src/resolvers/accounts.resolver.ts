@@ -5,17 +5,14 @@ import {
   Authentication,
   SignUpInput,
   AuthenticateInput,
-} from 'src/interface/user';
+} from '../interface/user';
 
 @Resolver()
 export class AccountResolver {
   constructor(private readonly accountService: AccountService) {}
 
   @Mutation('signUp')
-  async signUp(
-    @Args('input') input: SignUpInput,
-    @Context() context: any,
-  ): Promise<Authentication> {
+  async signUp(@Args('input') input: SignUpInput): Promise<Authentication> {
     const user = await this.accountService.register(input);
     // const user = await createUser(input.email, input.name, input.password);
     const token = await this.accountService.generateToken(user.id);
@@ -28,9 +25,7 @@ export class AccountResolver {
   @Mutation('authenticate')
   async authenticate(
     @Args('input') input: AuthenticateInput,
-    @Context() context: any,
   ): Promise<Authentication> {
-    console.log(input);
     const user = await this.accountService.login(input);
     // const user = await createUser(input.email, input.name, input.password);
     const token = await this.accountService.generateToken(user.id);
@@ -42,7 +37,6 @@ export class AccountResolver {
 
   @Query()
   async me(@Context() context: any): Promise<UserData> {
-    console.log(context.req.claims);
     if (!context.req.claims) {
       throw new Error('Unauthorized');
     }

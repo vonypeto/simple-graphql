@@ -11,21 +11,15 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 // import { AuthGuard } from './middleware/authorization';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AccountResolver } from './resolvers/accounts.resolver';
 import { QueryResolver } from './resolvers/query.resolver';
 import { JwtModule } from '@nestjs/jwt';
 import { AccountModule } from './services/account/account.module';
 import { privateDirectiveTransformer } from './directives/private';
 import { AuthorizationMiddleware } from './middleware/authorization';
 import { ProductModule } from './services/product/product.module';
-import { ProductResolver } from './resolvers/product.resolver';
-import { ProductService } from './services/product/product.service';
 @Module({
   imports: [
-    AccountModule,
-    ProductModule,
     ConfigModule.forRoot({
-      envFilePath: '.env', // Path to your environment file
       isGlobal: true,
     }),
     MongooseModule.forRootAsync({
@@ -36,6 +30,8 @@ import { ProductService } from './services/product/product.service';
         };
       },
     }),
+    AccountModule,
+    ProductModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {

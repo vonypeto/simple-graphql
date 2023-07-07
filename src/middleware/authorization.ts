@@ -23,7 +23,6 @@ export class AuthorizationMiddleware implements NestMiddleware {
     }
 
     req.claims = await this.jwtService.verifyAsync<{ id: string }>(token);
-    console.log('claims', req.claims);
     return next();
   }
 
