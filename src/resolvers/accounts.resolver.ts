@@ -1,34 +1,11 @@
 import { Resolver, Args, Mutation, Context, Query } from '@nestjs/graphql';
 import { AccountService } from '../services/account/account.service';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  // Additional user properties
-}
-
-interface UserData {
-  id: string;
-  email: string;
-  name: string;
-  createdAt: Date;
-  updatedAt: Date;
-  // Additional user properties
-}
-interface Authentication {
-  user: User;
-  token: string;
-}
-interface SignUpInput {
-  email: string;
-  name: string;
-  password: string;
-}
-interface AuthenticateInput {
-  email: string;
-  password: string;
-}
+import {
+  UserData,
+  Authentication,
+  SignUpInput,
+  AuthenticateInput,
+} from 'src/interface/user';
 
 @Resolver()
 export class AccountResolver {

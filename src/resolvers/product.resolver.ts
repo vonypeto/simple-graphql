@@ -1,75 +1,16 @@
 import { Mutation, Resolver, Args, Context, Query } from '@nestjs/graphql';
 import { ProductService } from '../services/product/product.service';
-
-interface CreateProductInput {
-  name: string;
-  description: string;
-}
-
-interface DeleteProductInput {
-  id: string;
-}
-interface Node {
-  id: string;
-}
-
-interface Account extends Node {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface Product extends Node {
-  id: string;
-  name: string;
-  description: string;
-  owner: Account;
-}
-interface BinaryQueryOperatorInput {
-  eq?: string;
-  ne?: string;
-  in?: string[];
-  nin?: string[];
-}
-
-interface StringQueryOperatorInput {
-  eq?: string;
-  ne?: string;
-  in?: string[];
-  nin?: string[];
-  startsWith?: string;
-  contains?: string;
-}
-
-interface ProductsFilter {
-  id?: BinaryQueryOperatorInput;
-  name?: StringQueryOperatorInput;
-}
-
-type ProductSortInput = Record<string, SortOrder>;
-
-enum SortOrder {
-  ASC = 1,
-  DESC = -1,
-}
-
-interface Binary {
-  toString(): string;
-}
-
-interface PageInfo {
-  hasNextPage: boolean;
-  endCursor?: Binary;
-}
-
-interface ProductEdge {
-  cursor: Binary;
-  node: Product;
-}
-interface ProductConnection {
-  edges: ProductEdge[];
-  pageInfo: PageInfo;
-}
+import {
+  Product,
+  ProductsFilter,
+  Binary,
+  PageInfo,
+  ProductEdge,
+  ProductConnection,
+  CreateProductInput,
+  DeleteProductInput,
+  ProductSortInput,
+} from 'src/interface/products';
 
 @Resolver()
 export class ProductResolver {
@@ -113,9 +54,7 @@ export class ProductResolver {
     const hasNextPage = products.length > first;
 
     // Get the end cursor from the last product in the array
-    const endCursor = hasNextPage
-      ? products[products.length - 1].id
-      : undefined;
+    const endCursor = hasNextPage ? edges[edges.length - 1].cursor : undefined;
 
     // Construct the PageInfo object
     const pageInfo: PageInfo = {
@@ -130,5 +69,18 @@ export class ProductResolver {
     };
 
     return productConnection;
+  }
+
+  @Mutation('deleteProduct')
+  async deleteProduct(
+    @Args('input') input: DeleteProductInput,
+    @Context() context: any,
+  ): Promise<boolean> {
+    console.log(context.req.claims);
+    const success = await this.productService.deleteProduct(
+      input,
+      context.req.claims,
+    );
+    return true;
   }
 }

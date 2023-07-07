@@ -4,75 +4,15 @@ import { Model } from 'mongoose';
 import { CreateProductDto, ProductDto } from './dto/product.dto';
 import { IProductDb } from '../../models/product.model';
 import { IAccountDb } from '../../models/account.model';
-
-interface CreateProductInput {
-  name: string;
-  description: string;
-}
-
-interface DeleteProductInput {
-  id: string;
-}
-interface Node {
-  id: string;
-}
-
-interface Account extends Node {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface Product extends Node {
-  id: string;
-  name: string;
-  description: string;
-  owner: Account;
-}
-interface BinaryQueryOperatorInput {
-  eq?: string;
-  ne?: string;
-  in?: string[];
-  nin?: string[];
-}
-
-interface StringQueryOperatorInput {
-  eq?: string;
-  ne?: string;
-  in?: string[];
-  nin?: string[];
-  startsWith?: string;
-  contains?: string;
-}
-
-interface ProductsFilter {
-  id?: BinaryQueryOperatorInput;
-  name?: StringQueryOperatorInput;
-}
-
-interface Binary {
-  toString(): string;
-}
-
-interface PageInfo {
-  hasNextPage: boolean;
-  endCursor?: Binary;
-}
-
-interface ProductEdge {
-  cursor: Binary;
-  node: Product;
-}
-interface ProductConnection {
-  edges: ProductEdge[];
-  pageInfo: PageInfo;
-}
-type ProductSortInput = Record<string, SortOrder>;
-
-enum SortOrder {
-  ASC = 1,
-  DESC = -1,
-}
+import * as mongoose from 'mongoose';
+import {
+  Product,
+  ProductsFilter,
+  SortOrder,
+  Binary,
+  ProductSortInput,
+  DeleteProductInput,
+} from 'src/interface/products';
 
 @Injectable()
 export class ProductService {
@@ -87,7 +27,6 @@ export class ProductService {
     input: CreateProductDto,
     context: any,
   ): Promise<ProductDto> {
-    // Your logic to create the product
     const user = await this.accountModel
       .findById(context.req.claims.id)
       .select('_id name email')
@@ -95,7 +34,7 @@ export class ProductService {
     const createdProduct = await this.productModel.create({
       name: input.name,
       description: input.description,
-      owner: context.req.claims.id, // Assuming user._id is the ID of the owner account
+      owner: new mongoose.Types.ObjectId(context.req.claims.id),
     });
 
     const productDto: ProductDto = {
@@ -118,44 +57,140 @@ export class ProductService {
     sort: ProductSortInput,
     context: any,
   ): Promise<Product[]> {
-    const query = this.productModel.find({
-      ...(filter.id && {
-        _id: {
-          ...(filter.id.eq && { $eq: filter.id.eq }),
-          ...(filter.id.ne && { $ne: filter.id.ne }),
-          ...(filter.id.in && filter.id.in.length > 0 && { $in: filter.id.in }),
-          ...(filter.id.nin &&
-            filter.id.nin.length > 0 && { $nin: filter.id.nin }),
-        },
-      }),
-      ...(filter.name && {
-        name: {
-          ...(filter.name.eq && { $eq: filter.name.eq }),
-          ...(filter.name.ne && { $ne: filter.name.ne }),
-          ...(filter.name.in &&
-            filter.name.in.length > 0 && { $in: filter.name.in }),
-          ...(filter.name.nin &&
-            filter.name.nin.length > 0 && { $nin: filter.name.nin }),
-        },
-      }),
+    const aggregationPipeline = [];
+    // Filter stage
+    // const id = new mongoose.Types.ObjectId();
+
+    const filterStage = {
+      $match: {
+        ...(filter.id && {
+          _id: {
+            ...(filter.id.eq && {
+              $eq: new mongoose.Types.ObjectId(filter.id.eq),
+            }),
+            ...(filter.id.ne && {
+              $ne: new mongoose.Types.ObjectId(filter.id.ne),
+            }),
+            ...(filter.id.in &&
+              filter.id.in.length > 0 && {
+                $in: filter.id.in.map((id) => new mongoose.Types.ObjectId(id)),
+              }),
+            ...(filter.id.nin &&
+              filter.id.nin.length > 0 && {
+                $nin: filter.id.nin.map(
+                  (id) => new mongoose.Types.ObjectId(id),
+                ),
+              }),
+          },
+        }),
+        ...(filter.name && {
+          name: {
+            ...(filter.name.eq && { $eq: filter.name.eq }),
+            ...(filter.name.ne && { $ne: filter.name.ne }),
+            ...(filter.name.in &&
+              filter.name.in.length > 0 && { $in: filter.name.in }),
+            ...(filter.name.nin &&
+              filter.name.nin.length > 0 && { $nin: filter.name.nin }),
+          },
+        }),
+        ...(after && {
+          _id: { $gt: new mongoose.Types.ObjectId(after.toString()) },
+        }),
+      },
+    };
+
+    aggregationPipeline.push(filterStage);
+
+    // Populate owner field
+    aggregationPipeline.push({
+      $lookup: {
+        let: { owner: '$owner' },
+        from: 'accounts',
+        localField: 'owner',
+        foreignField: '_id',
+        as: 'owner',
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$_id', '$$owner'] },
+            },
+          },
+          {
+            // sub parent array
+            $project: {
+              _id: 1,
+              name: 1,
+              email: 1,
+            },
+          },
+        ],
+      },
     });
-    // Apply sorting
-    query.sort(sort);
 
-    // Execute the query
-    const products = await query.exec();
+    // Unwind owner array
+    aggregationPipeline.push({
+      $unwind: {
+        path: '$owner',
+        preserveNullAndEmptyArrays: true,
+      },
+    });
 
+    // Sorting stage
+    if (sort) {
+      const sortStage = { $sort: {} };
+      Object.keys(sort).forEach((field) => {
+        sortStage.$sort[field] = sort[field] === SortOrder.ASC ? 1 : -1;
+      });
+      aggregationPipeline.push(sortStage);
+    }
+
+    // Limit stage
+    aggregationPipeline.push({ $limit: first });
+
+    // Execute the aggregation pipeline
+    const products = await this.productModel
+      .aggregate(aggregationPipeline)
+      .exec();
     const mappedProducts: Product[] = products.map((product) => ({
-      id: product._id.toString(),
+      id: product._id,
       name: product.name,
       description: product.description,
       owner: {
-        id: context.req.claims.id,
-        name: 'random',
-        email: 'random',
+        id: product.owner?._id || '',
+        name: product.owner?.name || '',
+        email: product.owner?.email || '',
       },
     }));
 
-    return mappedProducts.slice(0, first);
+    return mappedProducts;
+  }
+  async deleteProduct(
+    product: DeleteProductInput,
+    context: any,
+  ): Promise<boolean> {
+    const productId = product.id;
+
+    const existingProduct = await this.productModel.findById(productId).exec();
+
+    // Check if the product exists
+    if (!existingProduct) {
+      throw new Error('Product not found');
+    }
+    //    and if the owner matches the current user
+    if (!existingProduct || existingProduct.owner.toString() !== context.id) {
+      throw new Error('Cannot delete product');
+    }
+
+    // Perform the deletion operation
+    const deletionResult = await this.productModel
+      .deleteOne({ _id: productId })
+      .exec();
+
+    // Check if the deletion was successful
+    if (deletionResult && deletionResult.deletedCount === 1) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

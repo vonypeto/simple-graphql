@@ -1,10 +1,16 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { IAccountDb } from '../../models/account.model';
 import { UserDto } from './dto/user.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { UserData } from 'src/interface/user';
+
 @Injectable()
 export class AccountService {
   constructor(
@@ -31,17 +37,32 @@ export class AccountService {
     console.log(accountData);
     // Find the account with the provided email
     const account = await this.accountModel.findById(id);
+    console.log(account);
+    return this.mapToUserDto(account);
+  }
+  async login(accountData: Partial<IAccountDb>): Promise<UserData> {
+    const { email, password } = accountData;
+
+    // Find the account with the provided email
+    const account = await this.accountModel.findOne({ email });
+
+    if (!account) {
+      throw new NotFoundException('Invalid email or password');
+    }
+
+    // Compare the provided password with the hashed password in the database
+    const isPasswordValid = await bcrypt.compare(password, account.password);
+
+    if (!isPasswordValid) {
+      throw new NotFoundException('Invalid email or password');
+    }
 
     return this.mapToUserDto(account);
   }
-  async login(accountData: Partial<IAccountDb>) {
-    const createdAccount = await new this.accountModel(accountData).save();
-    return this.mapToUserDto(createdAccount);
-  }
 
-  private mapToUserDto(account: IAccountDb): UserDto {
-    const { _id, name, email, password, createdAt, updatedAt } = account;
-    return { id: _id, name, email, password, createdAt, updatedAt };
+  private mapToUserDto(account: IAccountDb): UserData {
+    const { _id, name, email, createdAt, updatedAt } = account;
+    return { id: _id, name, email, createdAt, updatedAt };
   }
 
   async generateToken(id: string) {

@@ -14,15 +14,14 @@ export function privateDirectiveTransformer(
         directiveName,
       )?.[0];
 
-      //directive
+      // directive
       if (privateDirective) {
         const { resolve = defaultFieldResolver } = fieldConfig;
-        console.log(privateDirective);
         // Replace the original resolver with a function that first performs the authorization check
         // and then calls the original resolver
         fieldConfig.resolve = async function (source, args, context, info) {
           // const gqlContext = GqlExecutionContext.create(context);
-          // const isAuthorized = await performAuthorizationCheck(gqlContext); // Implement your authorization logic here
+          // const isAuthorized = await performAuthorizationCheck(gqlContext); // Implement \
 
           if (!context.req.claims) {
             throw new Error('Unauthorized');
