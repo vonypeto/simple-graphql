@@ -56,6 +56,7 @@ export class ProductService {
     filter: ProductsFilter,
     sort: ProductSortInput,
   ): Promise<Product[]> {
+    const sortKey = sort.name || '_id';
     const aggregationPipeline = [];
     // Filter stage
     // const id = new mongoose.Types.ObjectId();
@@ -93,46 +94,12 @@ export class ProductService {
           },
         }),
         ...(after && {
-          _id: { $gt: new mongoose.Types.ObjectId(after.toString()) },
+          [sortKey]: { $gt: new mongoose.Types.ObjectId(after.toString()) },
         }),
       },
     };
 
     aggregationPipeline.push(filterStage);
-
-    // Populate owner field
-    aggregationPipeline.push({
-      $lookup: {
-        let: { owner: '$owner' },
-        from: 'accounts',
-        localField: 'owner',
-        foreignField: '_id',
-        as: 'owner',
-        pipeline: [
-          {
-            $match: {
-              $expr: { $eq: ['$_id', '$$owner'] },
-            },
-          },
-          {
-            // sub parent array
-            $project: {
-              _id: 1,
-              name: 1,
-              email: 1,
-            },
-          },
-        ],
-      },
-    });
-
-    // Unwind owner array
-    aggregationPipeline.push({
-      $unwind: {
-        path: '$owner',
-        preserveNullAndEmptyArrays: true,
-      },
-    });
 
     // Sorting stage
     if (sort) {
@@ -144,7 +111,7 @@ export class ProductService {
     }
 
     // Limit stage
-    aggregationPipeline.push({ $limit: first });
+    aggregationPipeline.push({ $limit: first + 1 });
 
     // Execute the aggregation pipeline
     const products = await this.productModel

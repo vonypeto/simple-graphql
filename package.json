@@ -8,8 +8,8 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "cat .env.local nest start",
-    "start:dev": "ts-node -r tsconfig-paths/register --files src/main.ts",
+    "start": "nest start",
+    "start:dev": "env $(cat .env.local) ts-node -r tsconfig-paths/register --files src/main.ts",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",

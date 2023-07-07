@@ -19,7 +19,7 @@ export class Product extends Document implements Product {
   @Prop({ required: true })
   description: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'accounts', required: true })
+  @Prop({ type: Types.ObjectId, required: true })
   owner: Types.ObjectId;
 
   @Prop({ default: Date.now })

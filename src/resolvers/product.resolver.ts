@@ -1,4 +1,12 @@
-import { Mutation, Resolver, Args, Context, Query } from '@nestjs/graphql';
+import {
+  Mutation,
+  Resolver,
+  Args,
+  Context,
+  Query,
+  ResolveField,
+  Parent,
+} from '@nestjs/graphql';
 import { ProductService } from '../services/product/product.service';
 import {
   Product,
@@ -11,10 +19,14 @@ import {
   DeleteProductInput,
   ProductSortInput,
 } from '../interface/products';
+import { AccountService } from '../services/account/account.service';
 
 @Resolver()
 export class ProductResolver {
-  constructor(private readonly productService: ProductService) {}
+  constructor(
+    private readonly productService: ProductService,
+    private readonly accountService: AccountService,
+  ) {}
 
   @Mutation('createProduct')
   async createProduct(
@@ -28,6 +40,12 @@ export class ProductResolver {
 
     return createdProduct;
   }
+
+  @ResolveField('owner')
+  async owner(@Parent() product: Omit<Product, 'owner'> & { owner: string }) {
+    return this.accountService.findById(product.owner);
+  }
+
   @Query('products')
   async listProducts(
     @Args('first') first = 10,

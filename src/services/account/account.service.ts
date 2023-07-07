@@ -61,6 +61,9 @@ export class AccountService {
     const { _id, name, email, createdAt, updatedAt } = account;
     return { id: _id, name, email, createdAt, updatedAt };
   }
+  async findById(id: string) {
+    return this.accountModel.findById(id);
+  }
 
   async generateToken(id: string) {
     const token = await this.jwtService.signAsync({ id });
