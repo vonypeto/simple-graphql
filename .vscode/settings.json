@@ -1,2 +1,8 @@
 {
+  "jestrunner.codeLens": [
+    "run",
+    "debug",
+    "e2e"
+  ],
+  "jestrunner.configPath": "./jest-debugger-config.json" 
 }
