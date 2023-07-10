@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CreateProductDto, ProductDto } from './dto/product.dto';
+import { CreateProductDto, ProductDto } from './dto.bak/product.dto';
 import { IProductDb } from '../../models/product.model';
 import { IAccountDb } from '../../models/account.model';
 import * as mongoose from 'mongoose';
@@ -13,6 +17,7 @@ import {
   ProductSortInput,
   DeleteProductInput,
   CreateProductInput,
+  UpdateProductInput,
 } from '../../interface/products';
 
 @Injectable()
@@ -23,7 +28,38 @@ export class ProductService {
     @InjectModel('accounts')
     private readonly accountModel: Model<IAccountDb>,
   ) {}
+  async updateProduct(
+    input: UpdateProductInput,
+    context: any,
+  ): Promise<Product> {
+    const { id, body } = input;
 
+    // Find the product by ID
+    const existingProduct = await this.productModel.findById(id).exec();
+
+    // Check if the product exists
+    if (!existingProduct) {
+      throw new Error('Product not found');
+    }
+
+    // Update the product fields
+    existingProduct.name = body.name || existingProduct.name;
+    existingProduct.description =
+      body.description || existingProduct.description;
+
+    // Save the updated product
+    const updatedProduct = await existingProduct.save();
+
+    // Construct the updated product DTO
+    const productDto: Product = {
+      id: updatedProduct._id.toString(),
+      name: updatedProduct.name,
+      description: updatedProduct.description,
+      owner: context.req.claims.id,
+    };
+
+    return productDto;
+  }
   async createProduct(
     input: CreateProductInput,
     context: any,
@@ -55,6 +91,7 @@ export class ProductService {
     after: Binary,
     filter: ProductsFilter,
     sort: ProductSortInput,
+    context: any,
   ): Promise<Product[]> {
     const sortKey = sort.name || '_id';
     const aggregationPipeline = [];
@@ -93,9 +130,9 @@ export class ProductService {
               filter.name.nin.length > 0 && { $nin: filter.name.nin }),
           },
         }),
-        ...(after && {
-          [sortKey]: { $gt: new mongoose.Types.ObjectId(after.toString()) },
-        }),
+        // ...(after && {
+        //   [sortKey]: { $gt: new mongoose.Types.ObjectId(after.toString()) },
+        // }),
       },
     };
 
@@ -121,11 +158,7 @@ export class ProductService {
       id: product._id,
       name: product.name,
       description: product.description,
-      owner: {
-        id: product.owner?._id || '',
-        name: product.owner?.name || '',
-        email: product.owner?.email || '',
-      },
+      owner: context.req.claims.id,
     }));
 
     return mappedProducts;
@@ -139,13 +172,11 @@ export class ProductService {
     const existingProduct = await this.productModel.findById(productId).exec();
 
     // Check if the product exists
-    if (!existingProduct) {
-      throw new Error('Product not found');
-    }
-    //    and if the owner matches the current user
-    if (!existingProduct || existingProduct.owner.toString() !== context.id) {
-      throw new Error('Cannot delete product');
-    }
+    if (!existingProduct) throw new NotFoundException('Product not found');
+
+    // Check if the user is the owner of the product
+    if (existingProduct.owner.toString() !== context.id)
+      throw new ForbiddenException('Cannot delete product');
 
     // Perform the deletion operation
     const deletionResult = await this.productModel
@@ -158,5 +189,21 @@ export class ProductService {
     } else {
       return false;
     }
+  }
+  async findProductById(productId: string): Promise<Product> {
+    const product = await this.productModel.findById(productId).exec();
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const productDto: any = {
+      id: product._id.toString(),
+      name: product.name,
+      description: product.description,
+      owner: product.owner.toString(),
+    };
+
+    return productDto;
   }
 }

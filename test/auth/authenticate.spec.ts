@@ -50,7 +50,6 @@ describe('Mutation.authenticate', () => {
       const { request, teardown } = await fixtures();
 
       // Sign up the user first
-      const name = faker.internet.userName();
       const email = faker.internet.email();
       const password = faker.internet.password();
 

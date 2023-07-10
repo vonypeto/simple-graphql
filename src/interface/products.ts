@@ -72,3 +72,13 @@ export interface DeleteProductInput {
 export interface ProductSortInput {
   [key: string]: SortOrder;
 }
+export interface UpdateProductInput {
+  id: Binary;
+  body: UpdateProductBody;
+}
+
+export interface UpdateProductBody {
+  name?: string;
+  description?: string;
+  // Add other properties to be updated as needed
+}

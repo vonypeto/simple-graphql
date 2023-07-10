@@ -18,6 +18,7 @@ import {
   CreateProductInput,
   DeleteProductInput,
   ProductSortInput,
+  UpdateProductInput,
 } from '../interface/products';
 import { AccountService } from '../services/account/account.service';
 
@@ -27,7 +28,13 @@ export class ProductResolver {
     private readonly productService: ProductService,
     private readonly accountService: AccountService,
   ) {}
-
+  @Mutation('updateProduct')
+  async updateProduct(
+    @Args('input') input: UpdateProductInput,
+    @Context() context: any,
+  ): Promise<Product> {
+    return this.productService.updateProduct(input, context);
+  }
   @Mutation('createProduct')
   async createProduct(
     @Args('input') input: CreateProductInput,
@@ -52,12 +59,14 @@ export class ProductResolver {
     @Args('after') after: Binary,
     @Args('filter') filter: ProductsFilter,
     @Args('sort') sort: ProductSortInput,
+    @Context() context: any,
   ): Promise<ProductConnection> {
     const products = await this.productService.listProducts(
       first,
       after,
       filter,
       sort,
+      context,
     );
 
     // Create ProductEdges with cursors
