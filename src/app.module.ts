@@ -46,7 +46,7 @@ import { ProductModule } from './services/product/product.module';
       driver: ApolloDriver,
       useFactory: async () => {
         return {
-          typePaths: [path.resolve(__dirname, './schema/*.graphql')],
+          typePaths: [path.resolve(__dirname, '../src/schema/*.graphql')],
           transformSchema: (schema) =>
             privateDirectiveTransformer(schema, 'private'),
         };
