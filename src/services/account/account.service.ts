@@ -44,20 +44,20 @@ export class AccountService {
     const account = await this.accountModel.findOne({ email });
 
     if (!account) {
-      throw new NotFoundException('Invalid email or password');
+      throw new NotFoundException('Invalid email');
     }
 
     // Compare the provided password with the hashed password in the database
     const isPasswordValid = await bcrypt.compare(password, account.password);
 
     if (!isPasswordValid) {
-      throw new NotFoundException('Invalid email or password');
+      throw new NotFoundException('Invalid password');
     }
 
     return this.mapToUserDto(account);
   }
 
-  private mapToUserDto(account: IAccountDb): UserData {
+  private mapToUserDto(account: any): UserData {
     const { _id, name, email, createdAt, updatedAt } = account;
     return { id: _id, name, email, createdAt, updatedAt };
   }
@@ -65,8 +65,11 @@ export class AccountService {
     return this.accountModel.findById(id);
   }
 
-  async generateToken(id: string) {
-    const token = await this.jwtService.signAsync({ id });
+  async generateToken(id: string, exp: string) {
+    const token = await this.jwtService.signAsync(
+      { id },
+      { expiresIn: exp || '1d' },
+    );
     return token;
   }
 }

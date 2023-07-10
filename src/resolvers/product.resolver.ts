@@ -21,7 +21,7 @@ import {
 } from '../interface/products';
 import { AccountService } from '../services/account/account.service';
 
-@Resolver()
+@Resolver('Product')
 export class ProductResolver {
   constructor(
     private readonly productService: ProductService,

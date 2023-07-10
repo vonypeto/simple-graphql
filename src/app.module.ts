@@ -25,7 +25,7 @@ import { ProductModule } from './services/product/product.module';
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        console.log(config.get('MONGODB_URI'));
+        // console.log(config.get('MONGODB_URI'));
         return {
           uri: config.get('MONGODB_URI'),
         };

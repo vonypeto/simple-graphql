@@ -19,10 +19,23 @@ export class AuthorizationMiddleware implements NestMiddleware {
 
     const [type, token] = authorizationHeader.split(' ');
     if (type !== 'Bearer' || !token) {
-      return new HttpException({ code: 'FORBIDDEN' }, HttpStatus.FORBIDDEN);
+      throw new HttpException({ code: 'FORBIDDEN' }, HttpStatus.FORBIDDEN);
     }
 
-    req.claims = await this.jwtService.verifyAsync<{ id: string }>(token);
+    try {
+      req.claims = await this.jwtService.verifyAsync<{
+        id: string;
+        exp: number;
+      }>(token);
+    } catch (error) {
+      if (error.message === 'jwt expired')
+        throw new HttpException(
+          { code: 'JWT_EXPIRED', message: 'JWT token expired' },
+          HttpStatus.FORBIDDEN,
+        );
+      else throw new HttpException({ code: 'FORBIDDEN' }, HttpStatus.FORBIDDEN);
+    }
+
     return next();
   }
 
@@ -39,7 +52,18 @@ export class AuthorizationMiddleware implements NestMiddleware {
         return false;
       }
 
-      req.claims = await this.jwtService.verifyAsync<{ id: string }>(token);
+      try {
+        req.claims = await this.jwtService.verifyAsync<{
+          id: string;
+          exp: number;
+        }>(token);
+
+        if (req.claims.exp * 1000 < Date.now()) {
+          return false;
+        }
+      } catch (error) {
+        return false;
+      }
 
       return true;
     }

@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ProductResolver } from '../../resolvers/product.resolver';
 import { AccountDbSchema } from '../../models/account.model';
+import { AccountService } from '../account/account.service';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { AccountDbSchema } from '../../models/account.model';
       },
     }),
   ],
-  providers: [ProductService, ProductResolver],
+  providers: [ProductService, ProductResolver, AccountService, ProductResolver],
   exports: [ProductService, ProductResolver],
 })
 export class ProductModule {}

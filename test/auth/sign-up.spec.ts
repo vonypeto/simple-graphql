@@ -1,4 +1,6 @@
-import fixtures from './fixtures';
+import { AccountService } from '../../src/services/account/account.service';
+import fixtures from '../fixtures';
+import { faker } from '@faker-js/faker';
 
 describe('Mutation.signUp', () => {
   test.concurrent(
@@ -17,9 +19,9 @@ describe('Mutation.signUp', () => {
       `,
             variables: {
               input: {
-                email: 'johndoe@getnada.com',
-                name: 'john doe',
-                password: '123',
+                email: faker.internet.userName(),
+                name: faker.internet.email(),
+                password: faker.internet.password(),
               },
             },
           }),

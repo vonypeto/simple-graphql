@@ -12,6 +12,7 @@ import {
   Binary,
   ProductSortInput,
   DeleteProductInput,
+  CreateProductInput,
 } from '../../interface/products';
 
 @Injectable()
@@ -24,9 +25,9 @@ export class ProductService {
   ) {}
 
   async createProduct(
-    input: CreateProductDto,
+    input: CreateProductInput,
     context: any,
-  ): Promise<ProductDto> {
+  ): Promise<Product> {
     const user = await this.accountModel
       .findById(context.req.claims.id)
       .select('_id name email')
@@ -37,19 +38,18 @@ export class ProductService {
       owner: new mongoose.Types.ObjectId(context.req.claims.id),
     });
 
-    const productDto: ProductDto = {
+    const productDto: Product = {
       id: createdProduct._id.toString(),
       name: createdProduct.name,
       description: createdProduct.description,
-      owner: {
-        id: context.req.claims.id,
-        name: user.name,
-        email: user.email,
-      },
+      owner: context.req.claims.id,
     };
     return productDto;
   }
-
+  async findOwner(ownerId: string): Promise<any> {
+    const owner = await this.accountModel.findById(ownerId).exec();
+    return owner;
+  }
   async listProducts(
     first = 10,
     after: Binary,

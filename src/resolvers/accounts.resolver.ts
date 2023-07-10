@@ -7,7 +7,7 @@ import {
   AuthenticateInput,
 } from '../interface/user';
 
-@Resolver()
+@Resolver('Account')
 export class AccountResolver {
   constructor(private readonly accountService: AccountService) {}
 
@@ -15,7 +15,7 @@ export class AccountResolver {
   async signUp(@Args('input') input: SignUpInput): Promise<Authentication> {
     const user = await this.accountService.register(input);
     // const user = await createUser(input.email, input.name, input.password);
-    const token = await this.accountService.generateToken(user.id);
+    const token = await this.accountService.generateToken(user.id, '1d');
     return {
       user,
       token,
@@ -27,8 +27,9 @@ export class AccountResolver {
     @Args('input') input: AuthenticateInput,
   ): Promise<Authentication> {
     const user = await this.accountService.login(input);
+
     // const user = await createUser(input.email, input.name, input.password);
-    const token = await this.accountService.generateToken(user.id);
+    const token = await this.accountService.generateToken(user.id, '1d');
     return {
       user,
       token,
